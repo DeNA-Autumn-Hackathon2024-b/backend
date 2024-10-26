@@ -24,7 +24,7 @@ func setupDB(dbDriver string, dsn string) (*sql.DB, error) {
 
 func Connect() *sql.DB {
 	dbDriver := "postgres"
-	dsn := "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=cassette sslmode=disable"
+	dsn := "host=postgres_db_1 port=5432 user=postgres password=postgres dbname=cassette sslmode=disable"
 	db, err := setupDB(dbDriver, dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +37,7 @@ func Connect() *sql.DB {
 func (i *Infrastructure) ConnectDB() *pgx.Conn {
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=cassette sslmode=disable")
+	conn, err := pgx.Connect(ctx, "host=db port=5432 user=postgres password=postgres dbname=cassette sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
