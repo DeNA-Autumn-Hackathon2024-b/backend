@@ -22,15 +22,11 @@ func (c *Controller) PostCassette(ctx echo.Context) error {
 
 func (c *Controller) GetCassettesByUser(ctx echo.Context) error {
 	userID := ctx.Param("user_id")
-
-	var uuidBytes [16]byte
-	copy(uuidBytes[:], userID)
-
-	uuid := pgtype.UUID{
-		Bytes: uuidBytes,
-		Valid: true,
+	var uuid pgtype.UUID
+	err := uuid.Scan(userID)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, "Invalid UUID format")
 	}
-
 	cassettes, err := c.db.GetCassettesByUser(ctx.Request().Context(), uuid)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, "Failed to get cassettes")
@@ -40,14 +36,14 @@ func (c *Controller) GetCassettesByUser(ctx echo.Context) error {
 
 func (c *Controller) GetCassette(ctx echo.Context) error {
 	userID := ctx.Param("user_id")
-	var uuidBytes [16]byte
-	copy(uuidBytes[:], userID)
-
-	uuid := pgtype.UUID{
-		Bytes: uuidBytes,
-		Valid: true,
+	var uuid pgtype.UUID
+	err := uuid.Scan(userID)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, "Invalid UUID format")
 	}
-
-	c.db.GetCassette(ctx.Request().Context(), uuid)
-	return ctx.String(http.StatusOK, "Get Cassette")
+	res, err := c.db.GetCassette(ctx.Request().Context(), uuid)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "Failed to get cassette")
+	}
+	return ctx.JSON(http.StatusOK, res)
 }

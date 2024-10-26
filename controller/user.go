@@ -25,5 +25,5 @@ func (ct *Controller) GetUser(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to get user")
 	}
 
-	return c.String(http.StatusOK, res.Name)
+	return c.JSON(http.StatusOK, res)
 }
