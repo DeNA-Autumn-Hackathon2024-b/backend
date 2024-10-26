@@ -7,6 +7,8 @@ import (
 	sqlc "github.com/DeNA-Autumn-Hackathon2024-b/backend/db/sqlc_gen"
 	dbDriver "github.com/DeNA-Autumn-Hackathon2024-b/backend/infra"
 
+	"github.com/DeNA-Autumn-Hackathon2024-b/backend/infra"
+	"github.com/labstack/echo/v4"
 	echo "github.com/labstack/echo/v4"
 )
 
@@ -31,6 +33,10 @@ func main() {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	router.echo.GET("/users/:id", controller.GetUser)
+	i := infra.NewInfrastructure()
+	c := controller.NewController(i)
+
+	router.echo.GET("/users/:id", c.GetUser)
+	e.POST("/song", c.UploadSong)
 	router.echo.Logger.Fatal(e.Start(":8086"))
 }
