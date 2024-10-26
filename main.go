@@ -15,12 +15,14 @@ func main() {
 	i := infra.NewInfrastructure()
 	defer i.CloseDB()
 	c := controller.NewController(i)
-	e.GET("/cassettes", c.GetCassettesByUser)
+	e.GET("/cassettes/:cassette_id", c.GetCassettesByUser)
+	e.POST("/cassette", c.CreateCassette)
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
 
 	e.GET("/users/:id", c.GetUser)
+
 	e.POST("/song", c.UploadSong)
 	e.Logger.Fatal(e.Start(":8080"))
 }
