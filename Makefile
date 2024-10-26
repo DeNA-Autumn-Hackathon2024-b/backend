@@ -6,3 +6,6 @@ up:
 
 fmt:
 	gofmt -s -l -w .
+
+gen:
+	./scripts/generate.sh
