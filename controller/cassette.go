@@ -40,7 +40,6 @@ func (c *Controller) GetCassettesByUser(ctx echo.Context) error {
 
 func (c *Controller) GetCassette(ctx echo.Context) error {
 	userID := ctx.Param("user_id")
-
 	var uuidBytes [16]byte
 	copy(uuidBytes[:], userID)
 
