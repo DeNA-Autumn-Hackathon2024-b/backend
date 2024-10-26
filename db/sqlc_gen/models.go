@@ -32,7 +32,7 @@ type Song struct {
 type User struct {
 	ID        pgtype.UUID
 	Name      string
-	IconUrl   string
+	IconUrl   pgtype.Text
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 	DeletedAt pgtype.Timestamptz

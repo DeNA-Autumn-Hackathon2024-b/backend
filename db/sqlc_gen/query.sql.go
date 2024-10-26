@@ -77,25 +77,16 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 }
 
 const postCassette = `-- name: PostCassette :one
-INSERT INTO cassette (id, user_id, name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, user_id, name, created_at, updated_at
+INSERT INTO cassette (user_id, name) VALUES ($1, $2) RETURNING id, user_id, name, created_at, updated_at
 `
 
 type PostCassetteParams struct {
-	ID        pgtype.UUID
-	UserID    pgtype.UUID
-	Name      string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	UserID pgtype.UUID
+	Name   string
 }
 
 func (q *Queries) PostCassette(ctx context.Context, arg PostCassetteParams) (Cassette, error) {
-	row := q.db.QueryRow(ctx, postCassette,
-		arg.ID,
-		arg.UserID,
-		arg.Name,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
+	row := q.db.QueryRow(ctx, postCassette, arg.UserID, arg.Name)
 	var i Cassette
 	err := row.Scan(
 		&i.ID,
@@ -108,25 +99,17 @@ func (q *Queries) PostCassette(ctx context.Context, arg PostCassetteParams) (Cas
 }
 
 const postUser = `-- name: PostUser :one
-INSERT INTO "user" (id, name, icon_url, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, icon_url, created_at, updated_at, deleted_at
+INSERT INTO "user" (id, name, icon_url) VALUES ($1, $2, $3) RETURNING id, name, icon_url, created_at, updated_at, deleted_at
 `
 
 type PostUserParams struct {
-	ID        pgtype.UUID
-	Name      string
-	IconUrl   string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID      pgtype.UUID
+	Name    string
+	IconUrl pgtype.Text
 }
 
 func (q *Queries) PostUser(ctx context.Context, arg PostUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, postUser,
-		arg.ID,
-		arg.Name,
-		arg.IconUrl,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
+	row := q.db.QueryRow(ctx, postUser, arg.ID, arg.Name, arg.IconUrl)
 	var i User
 	err := row.Scan(
 		&i.ID,
