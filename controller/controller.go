@@ -11,8 +11,12 @@ type Controller struct {
 }
 
 func NewController(infra *infra.Infrastructure) *Controller {
+	sql, err := infra.ConnectDB()
+	if err != nil {
+		panic(err)
+	}
 	return &Controller{
 		infra: infra,
-		db:    sqlc.New(infra.ConnectDB()),
+		db:    sqlc.New(sql),
 	}
 }
