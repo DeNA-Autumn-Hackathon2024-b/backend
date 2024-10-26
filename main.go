@@ -13,6 +13,7 @@ func main() {
 	e := echo.New()
 
 	i := infra.NewInfrastructure()
+	defer i.CloseDB()
 	c := controller.NewController(i)
 	e.GET("/cassettes", c.GetCassettesByUser)
 	e.GET("/health", func(c echo.Context) error {
