@@ -8,20 +8,33 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Cassette struct {
-	db *sqlc.Queries
+type CreateCassetteRequest struct {
+	Name   string `json:"name"`
+	UserID string `json:"user_id"`
 }
 
-func NewCassette(db *sqlc.Queries) *Cassette {
-	return &Cassette{db: db}
-}
-
-func (c *Controller) PostCassette(ctx echo.Context) error {
-	return ctx.String(http.StatusOK, "Post Cassette")
+func (c *Controller) CreateCassette(ctx echo.Context) error {
+	var req CreateCassetteRequest
+	if err := ctx.Bind(&req); err != nil {
+		return err
+	}
+	var uuid pgtype.UUID
+	err := uuid.Scan(req.UserID)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, "Invalid UUID format")
+	}
+	res, err := c.db.PostCassette(ctx.Request().Context(), sqlc.PostCassetteParams{
+		Name:   req.Name,
+		UserID: uuid,
+	})
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "Failed to create cassette")
+	}
+	return ctx.String(http.StatusOK, res.Name)
 }
 
 func (c *Controller) GetCassettesByUser(ctx echo.Context) error {
-	userID := ctx.Param("user_id")
+	userID := ctx.Param("cassette_id")
 	var uuid pgtype.UUID
 	err := uuid.Scan(userID)
 	if err != nil {
