@@ -34,7 +34,7 @@ func Connect() *sql.DB {
 	return db
 }
 
-func ConnectDB() *pgx.Conn {
+func (i *Infrastructure) ConnectDB() *pgx.Conn {
 	ctx := context.Background()
 
 	conn, err := pgx.Connect(ctx, "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=cassette sslmode=disable")
