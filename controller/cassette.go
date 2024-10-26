@@ -9,8 +9,8 @@ import (
 )
 
 type CreateCassetteRequest struct {
-	Name   string `json:"name"`
-	UserID string `json:"user_id"`
+	Name   string `form:"name" validate:"required"`
+	UserID string `form:"user_id" validate:"required"`
 }
 
 func (c *Controller) CreateCassette(ctx echo.Context) error {
