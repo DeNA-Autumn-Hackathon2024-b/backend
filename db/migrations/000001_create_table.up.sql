@@ -8,7 +8,7 @@ CREATE TABLE "cassette" (
 CREATE TABLE "user" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "name" varchar NOT NULL,
-    "icon_url" varchar NOT NULL,
+    "icon_url" varchar,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamptz
