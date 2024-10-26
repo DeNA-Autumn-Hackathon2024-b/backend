@@ -15,7 +15,8 @@ func main() {
 	i := infra.NewInfrastructure()
 	defer i.CloseDB()
 	c := controller.NewController(i)
-	e.GET("/cassettes/:cassette_id", c.GetCassettesByUser)
+	e.GET("/cassettes/:user_id", c.GetCassettesByUser)
+	e.GET("/cassette/:cassette_id", c.GetCassette)
 	e.POST("/cassette", c.CreateCassette)
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
