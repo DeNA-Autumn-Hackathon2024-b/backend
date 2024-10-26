@@ -15,11 +15,10 @@ func PostUser(c echo.Context) error {
 func (ct *Controller) GetUser(c echo.Context) error {
 	// User ID from path `users/:id`
 	id := c.Param("id")
-	var uuidBytes [16]byte
-	copy(uuidBytes[:], id)
-	uuid := pgtype.UUID{
-		Bytes: uuidBytes,
-		Valid: true,
+	var uuid pgtype.UUID
+	err := uuid.Scan(id)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid UUID format")
 	}
 	res, err := ct.db.GetUser(c.Request().Context(), uuid)
 	if err != nil {
