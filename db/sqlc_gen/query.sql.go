@@ -7,15 +7,117 @@ package sqlc_gen
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const getUser = `-- name: GetUser :one
-SELECT id, name FROM users WHERE id = $1 LIMIT 1
+const getCassette = `-- name: GetCassette :one
+SELECT id, user_id, name, created_at, updated_at FROM cassette WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
+func (q *Queries) GetCassette(ctx context.Context, id pgtype.UUID) (Cassette, error) {
+	row := q.db.QueryRow(ctx, getCassette, id)
+	var i Cassette
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCassettesByUser = `-- name: GetCassettesByUser :many
+SELECT id, user_id, name, created_at, updated_at FROM cassette WHERE user_id = $1
+`
+
+func (q *Queries) GetCassettesByUser(ctx context.Context, userID pgtype.UUID) ([]Cassette, error) {
+	rows, err := q.db.Query(ctx, getCassettesByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Cassette
+	for rows.Next() {
+		var i Cassette
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUser = `-- name: GetUser :one
+SELECT id, name, icon_url, created_at, updated_at, deleted_at FROM "user" WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUser, id)
 	var i User
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.IconUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const postCassette = `-- name: PostCassette :one
+INSERT INTO cassette (user_id, name) VALUES ($1, $2) RETURNING id, user_id, name, created_at, updated_at
+`
+
+type PostCassetteParams struct {
+	UserID pgtype.UUID
+	Name   string
+}
+
+func (q *Queries) PostCassette(ctx context.Context, arg PostCassetteParams) (Cassette, error) {
+	row := q.db.QueryRow(ctx, postCassette, arg.UserID, arg.Name)
+	var i Cassette
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const postUser = `-- name: PostUser :one
+INSERT INTO "user" (id, name, icon_url) VALUES ($1, $2, $3) RETURNING id, name, icon_url, created_at, updated_at, deleted_at
+`
+
+type PostUserParams struct {
+	ID      pgtype.UUID
+	Name    string
+	IconUrl pgtype.Text
+}
+
+func (q *Queries) PostUser(ctx context.Context, arg PostUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, postUser, arg.ID, arg.Name, arg.IconUrl)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.IconUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
 	return i, err
 }
