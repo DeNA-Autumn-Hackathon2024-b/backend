@@ -35,7 +35,7 @@ func (ct *Controller) CreateUser(c echo.Context) error {
 	}
 	var image *multipart.FileHeader
 
-	imageFiles, ok := form.File["image"]
+	imageFiles, ok := form.File["icon"]
 	if !ok {
 		image = nil
 	} else {
@@ -49,6 +49,10 @@ func (ct *Controller) CreateUser(c echo.Context) error {
 		}
 		defer src.Close()
 		data, err := io.ReadAll(src)
+		if err != nil {
+			c.Logger().Error(err)
+			return err
+		}
 		err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", fmt.Sprintf("%s.%s", req.UserID, image.Filename), bytes.NewReader(data))
 		if err != nil {
 			c.Logger().Error(err)
@@ -59,6 +63,9 @@ func (ct *Controller) CreateUser(c echo.Context) error {
 		ID:   uuid,
 		Name: req.Name,
 	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to create user")
+	}
 
 	return c.JSON(http.StatusOK, "Success Create User")
 }
