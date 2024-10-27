@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	sqlc "github.com/DeNA-Autumn-Hackathon2024-b/backend/db/sqlc_gen"
-
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -76,22 +74,6 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 				c.Logger().Error(fmt.Errorf("1%v", err))
 				return fmt.Errorf("1%v", err)
 			}
-
-			
-
-			res, err := ct.db.PostSong(c.Request().Context(), sqlc.PostSongParams{
-				CassetteID: cassetteID,
-				UserID:     userID,
-				SongNumber: songNumber,
-				SongTime:   songTime,
-				Name:       name,
-				Url:        os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8",
-				UploadUser: uploadUser,
-			})
-			if err != nil {
-				return c.String(http.StatusInternalServerError, "Failed to create cassette")
-			}
-			fmt.Println(res)
 		}
 	}
 
@@ -115,9 +97,6 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 
 	// TODO:DBに曲情報を保存
 	fmt.Println(cassetteID, userID, songNumber, songTime, name, uploadUser)
-	
-
-
 
 	m3u8URL := os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8"
 	// レスポンスのJSONを構築
