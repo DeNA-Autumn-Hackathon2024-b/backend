@@ -9,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	sqlc "github.com/DeNA-Autumn-Hackathon2024-b/backend/db/sqlc_gen"
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -28,15 +31,30 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 	defer src.Close()
 
 	// フォームデータから追加情報を取得
-	cassetteID := c.FormValue("cassette_id")
-	userID := c.FormValue("user_id")
+	var cassetteID pgtype.UUID
+	var userID pgtype.UUID
+	err = cassetteID.Scan(c.FormValue("cassette_id"))
+	err = userID.Scan(c.FormValue("user_id"))
 	songNumber, _ := strconv.Atoi(c.FormValue("song_number"))
 	songTime, _ := strconv.Atoi(c.FormValue("song_time"))
 	name := c.FormValue("name")
-	uploadUser := c.FormValue("upload_user")
+	// uploadUser := c.FormValue("upload_user")
 
 	// S3にアップロード
 	songID := uuid.New().String()
+
+	res, err := ct.db.PostSong(c.Request().Context(), sqlc.PostSongParams{
+		CassetteID: cassetteID,
+		UserID:     userID,
+		SongNumber: int32(songNumber),
+		SongTime:   pgtype.Int4{Int32: int32(songTime), Valid: true},
+		Name:       name,
+		Url:        os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8",
+	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to create cassette")
+	}
+
 	err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/original.mp3", src)
 	if err != nil {
 		c.Logger().Error(err)
@@ -74,6 +92,7 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 				c.Logger().Error(fmt.Errorf("1%v", err))
 				return fmt.Errorf("1%v", err)
 			}
+			fmt.Println(res)
 		}
 	}
 
@@ -96,7 +115,7 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 	}
 
 	// TODO:DBに曲情報を保存
-	fmt.Println(cassetteID, userID, songNumber, songTime, name, uploadUser)
+	fmt.Println(cassetteID, userID, songNumber, songTime, name)
 
 	m3u8URL := os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8"
 	// レスポンスのJSONを構築

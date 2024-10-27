@@ -12,3 +12,6 @@ SELECT * FROM cassette WHERE user_id = $1;
 
 -- name: PostCassette :one
 INSERT INTO cassette (user_id, name) VALUES ($1, $2) RETURNING *;
+
+-- name: PostSong :one
+INSERT INTO songs (cassette_id, user_id, song_number, song_time, name, url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
