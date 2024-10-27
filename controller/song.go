@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -29,20 +30,55 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 
 	// TODO:mp3をs3にアップロード
 	songID := uuid.New().String()
-	err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+".mp3", src)
+	err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/original.mp3", src)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
-	fmt.Println("うまくいった")
+
+	s3URL := os.Getenv("S3_URL")
 	// mp3をHLSに変換
-	err = ct.infra.ConvertVideoHLS(c.Request().Context(), songID, "tmep/input.mp3")
+	err = ct.infra.ConvertVideoHLS(c.Request().Context(), songID, s3URL+"/"+songID+"/original.mp3")
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
 
 	// TODO:output をアップロード
+	err = filepath.Walk("output/"+songID, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 対象のファイルかどうかを確認
+		if strings.HasPrefix(filepath.Base(path), songID) && (strings.HasSuffix(path, ".m3u8") || strings.HasSuffix(path, ".ts")) {
+			// TODO: 失敗した時にtsファイルを削除できるように修正する
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+
+			defer func() error {
+				err = os.Remove(path)
+				if err != nil {
+					return err
+				}
+				return nil
+			}()
+
+			err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+file.Name(), file)
+			if err != nil {
+				c.Logger().Error(err)
+				return err
+			}
+
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to remove output files: %w", err)
+	}
 
 	// outputのやつ消す
 	outputDir := "output"
