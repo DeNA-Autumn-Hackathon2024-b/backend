@@ -7,6 +7,8 @@ services:
       - 8080:8080
     volumes:
       - ./:/app
+    environment:
+      - S3_URL=temp
       # Use postgres/example user/password credentials
   db:
     image: postgres
