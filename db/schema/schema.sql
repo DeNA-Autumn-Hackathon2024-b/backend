@@ -21,7 +21,6 @@ CREATE TABLE "songs" (
     "song_time" int,
     "name" varchar NOT NULL,
     "url" varchar NOT NULL,
-    "upload_user" uuid NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

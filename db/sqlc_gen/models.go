@@ -24,7 +24,6 @@ type Song struct {
 	SongTime   pgtype.Int4
 	Name       string
 	Url        string
-	UploadUser pgtype.UUID
 	CreatedAt  pgtype.Timestamptz
 	UpdatedAt  pgtype.Timestamptz
 }
