@@ -47,6 +47,7 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 	// TODO:output をアップロード
 	err = filepath.Walk("output/"+songID, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			c.Logger().Error(err)
 			return err
 		}
 
@@ -55,12 +56,14 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 			// TODO: 失敗した時にtsファイルを削除できるように修正する
 			file, err := os.Open(path)
 			if err != nil {
+				c.Logger().Error(err)
 				return err
 			}
 
 			defer func() error {
 				err = os.Remove(path)
 				if err != nil {
+					c.Logger().Error(err)
 					return err
 				}
 				return nil
