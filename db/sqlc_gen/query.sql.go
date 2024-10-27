@@ -58,6 +58,41 @@ func (q *Queries) GetCassettesByUser(ctx context.Context, userID pgtype.UUID) ([
 	return items, nil
 }
 
+const getSongsByCassette = `-- name: GetSongsByCassette :many
+SELECT id, cassette_id, user_id, song_number, song_time, name, url, upload_user, created_at, updated_at FROM songs WHERE cassette_id = $1
+`
+
+func (q *Queries) GetSongsByCassette(ctx context.Context, cassetteID pgtype.UUID) ([]Song, error) {
+	rows, err := q.db.Query(ctx, getSongsByCassette, cassetteID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Song
+	for rows.Next() {
+		var i Song
+		if err := rows.Scan(
+			&i.ID,
+			&i.CassetteID,
+			&i.UserID,
+			&i.SongNumber,
+			&i.SongTime,
+			&i.Name,
+			&i.Url,
+			&i.UploadUser,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUser = `-- name: GetUser :one
 SELECT id, name, icon_url, created_at, updated_at, deleted_at FROM "user" WHERE id = $1 LIMIT 1
 `
