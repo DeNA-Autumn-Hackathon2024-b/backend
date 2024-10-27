@@ -54,11 +54,11 @@ func (ct *Controller) CreateUser(c echo.Context) error {
 			c.Logger().Error(err)
 			return err
 		}
-		_, err = ct.db.PostUser(c.Request().Context(), sqlc_gen.PostUserParams{
-			ID:   uuid,
-			Name: req.Name,
-		})
 	}
+	_, err = ct.db.PostUser(c.Request().Context(), sqlc_gen.PostUserParams{
+		ID:   uuid,
+		Name: req.Name,
+	})
 
 	return c.JSON(http.StatusOK, "Success Create User")
 }
