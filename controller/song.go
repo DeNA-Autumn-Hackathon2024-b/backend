@@ -114,9 +114,6 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 		}
 	}
 
-	// TODO:DBに曲情報を保存
-	fmt.Println(cassetteID, userID, songNumber, songTime, name)
-
 	m3u8URL := os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8"
 	// レスポンスのJSONを構築
 	response := map[string]string{
