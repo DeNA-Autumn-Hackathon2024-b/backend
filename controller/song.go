@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -38,49 +39,36 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 
 	s3URL := os.Getenv("S3_URL")
 	// mp3をHLSに変換
-	err = ct.infra.ConvertVideoHLS(c.Request().Context(), songID, s3URL+"/"+songID+"/original.mp3")
+	key := s3URL + "/" + songID + "/original.mp3"
+	// key = "https://cassette-songs.s3.ap-southeast-2.amazonaws.com/34ccd82a-6020-4bd5-b197-098f62f6bcc7.mp3"
+	err = ct.infra.ConvertVideoHLS(c.Request().Context(), songID, key)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
 
-	// TODO:output をアップロード
-	err = filepath.Walk("output/"+songID, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			c.Logger().Error(err)
-			return err
-		}
+	dirPath := "output"
 
-		// 対象のファイルかどうかを確認
-		if strings.HasPrefix(filepath.Base(path), songID) && (strings.HasSuffix(path, ".m3u8") || strings.HasSuffix(path, ".ts")) {
-			// TODO: 失敗した時にtsファイルを削除できるように修正する
-			file, err := os.Open(path)
-			if err != nil {
-				c.Logger().Error(err)
-				return err
-			}
-
-			defer func() error {
-				err = os.Remove(path)
-				if err != nil {
-					c.Logger().Error(err)
-					return err
-				}
-				return nil
-			}()
-
-			err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+file.Name(), file)
-			if err != nil {
-				c.Logger().Error(err)
-				return err
-			}
-
-		}
-
-		return nil
-	})
+	// ディレクトリの内容を取得
+	files, err := os.ReadDir(dirPath)
 	if err != nil {
-		return fmt.Errorf("failed to remove output files: %w", err)
+		log.Fatal(err)
+	}
+
+	// ファイルを一つずつ表示（prefix が "song" のもののみ）
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), songID) {
+			fileD, err := os.Open("output/" + file.Name())
+			if err != nil {
+				c.Logger().Error(fmt.Errorf("1%v", err))
+				return fmt.Errorf("1%v", err)
+			}
+			err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/"+songID+file.Name(), fileD)
+			if err != nil {
+				c.Logger().Error(fmt.Errorf("1%v", err))
+				return fmt.Errorf("1%v", err)
+			}
+		}
 	}
 
 	// outputのやつ消す
@@ -105,6 +93,8 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 			fmt.Println("Error deleting ts file:", err)
 		}
 	}
+
+	// ct.db.PostCassette()
 
 	defer src.Close()
 	return c.String(http.StatusOK, "id")

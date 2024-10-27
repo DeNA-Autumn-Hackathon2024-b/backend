@@ -19,6 +19,7 @@ func (i *Infrastructure) ConvertVideoHLS(ctx context.Context, songID string, s3U
 
 	log.Println(cmd.Args)
 	result, err := cmd.CombinedOutput()
+
 	log.Println(string(result))
 	if err != nil {
 		return fmt.Errorf("failed to execute ffmpeg command: %w", err)
