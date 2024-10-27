@@ -4,7 +4,36 @@
 
 package sqlc_gen
 
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type Cassette struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	Name      string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type Song struct {
+	ID         pgtype.UUID
+	CassetteID pgtype.UUID
+	UserID     pgtype.UUID
+	SongNumber int32
+	SongTime   pgtype.Int4
+	Name       string
+	Url        string
+	UploadUser pgtype.UUID
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
 type User struct {
-	ID   int32
-	Name string
+	ID        pgtype.UUID
+	Name      string
+	IconUrl   pgtype.Text
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	DeletedAt pgtype.Timestamptz
 }
