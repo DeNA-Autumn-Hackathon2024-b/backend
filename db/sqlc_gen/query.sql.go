@@ -121,3 +121,36 @@ func (q *Queries) PostUser(ctx context.Context, arg PostUserParams) (User, error
 	)
 	return i, err
 }
+
+const postSong = `-- name: PostSong :one
+INSERT INTO "song" (id, cassette_id, user_id, song_number, ,song_time, name, url, upload_user) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, cassette_id, user_id, song_number, song_time, name, url, upload_user
+`
+
+type PostSongParams struct {
+	ID      pgtype.UUID
+	CassetteID    string
+	UserID  string
+	SongNumber  int
+	SongTime  int
+	Name  string
+	Url string
+	UploadUser string
+}
+
+
+func (q *Queries) PostSong(ctx context.Context, arg PostSongParams) (Song, error) {
+	row := q.db.QueryRow(ctx, postSong, arg.ID, arg.CassetteID, arg.UserID, arg.SongNumber, arg.SongTime, arg.Name, arg.Url, arg.UploadUser)
+	var i Song
+	err := row.Scan(
+		&i.ID,
+		&i.CassetteID,
+		&i.UserID,
+		&i.SongNumber,
+		&i.SongTime,
+		&i.Name,
+		&i.Url,
+		&i.UploadUser,
+	)
+	return i, err
+}
+
