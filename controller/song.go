@@ -29,6 +29,12 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 
 	// TODO:mp3をs3にアップロード
 	songID := uuid.New().String()
+	err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+".mp3", src)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	fmt.Println("うまくいった")
 	// mp3をHLSに変換
 	err = ct.infra.ConvertVideoHLS(c.Request().Context(), songID, "tmep/input.mp3")
 	if err != nil {
