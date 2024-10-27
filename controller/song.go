@@ -92,7 +92,6 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 				c.Logger().Error(fmt.Errorf("1%v", err))
 				return fmt.Errorf("1%v", err)
 			}
-
 			fmt.Println(res)
 		}
 	}
@@ -115,7 +114,8 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 		}
 	}
 
-	fmt.Println(cassetteID, userID, songNumber, songTime, name)
+	// TODO:DBに曲情報を保存
+	fmt.Println(cassetteID, userID, songNumber, songTime, name, uploadUser)
 
 	m3u8URL := os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8"
 	// レスポンスのJSONを構築
