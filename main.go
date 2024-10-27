@@ -25,6 +25,7 @@ func main() {
 	})
 
 	e.GET("/users/:id", c.GetUser)
+	e.POST("/users", c.CreateUser)
 
 	e.POST("/song", c.UploadSong)
 	e.Logger.Fatal(e.Start(":8080"))
