@@ -37,8 +37,26 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 	name := c.FormValue("name")
 	uploadUser := c.FormValue("upload_user")
 
+
+
 	// S3にアップロード
 	songID := uuid.New().String()
+
+	res, err := ct.db.PostSong(c.Request().Context(), sqlc.PostSongParams{
+		CassetteID: cassetteID,
+		UserID:     userID,
+		SongNumber: songNumber,
+		SongTime:   songTime,
+		Name:       name,
+		Url:        os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8",
+		UploadUser: uploadUser,
+	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to create cassette")
+	}
+	fmt.Println(res)
+
+
 	err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/original.mp3", src)
 	if err != nil {
 		c.Logger().Error(err)

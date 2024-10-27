@@ -123,7 +123,10 @@ func (q *Queries) PostUser(ctx context.Context, arg PostUserParams) (User, error
 }
 
 const postSong = `-- name: PostSong :one
-INSERT INTO "song" (id, cassette_id, user_id, song_number, ,song_time, name, url, upload_user) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, cassette_id, user_id, song_number, song_time, name, url, upload_user
+INSERT INTO "songs" (id, cassette_id, user_id, song_number, song_time, name, url, upload_user) 
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+RETURNING id, cassette_id, user_id, song_number, song_time, name, url, upload_user
+
 `
 
 type PostSongParams struct {
