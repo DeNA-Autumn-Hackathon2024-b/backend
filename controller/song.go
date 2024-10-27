@@ -85,7 +85,7 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 				SongNumber: songNumber,
 				SongTime:   songTime,
 				Name:       name,
-				Url:        key,
+				Url:        os.Getenv("S3_URL") + "/" + songID + "/" + songID + ".m3u8",
 				UploadUser: uploadUser,
 			})
 			if err != nil {
