@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 )
 
 func (ct *Controller) UploadSong(c echo.Context) error {
+	// リクエストから音楽ファイルを取得
 	file, err := c.FormFile("song")
 	if err != nil {
 		return err
@@ -23,13 +25,17 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 		c.Logger().Error(err)
 		return err
 	}
+	defer src.Close()
 
-	err = os.MkdirAll("output", 0755)
-	if err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
-	}
+	// フォームデータから追加情報を取得
+	cassetteID := c.FormValue("cassette_id")
+	userID := c.FormValue("user_id")
+	songNumber, _ := strconv.Atoi(c.FormValue("song_number"))
+	songTime, _ := strconv.Atoi(c.FormValue("song_time"))
+	name := c.FormValue("name")
+	uploadUser := c.FormValue("upload_user")
 
-	// TODO:mp3をs3にアップロード
+	// S3にアップロード
 	songID := uuid.New().String()
 	err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/original.mp3", src)
 	if err != nil {
@@ -37,8 +43,8 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 		return err
 	}
 
+	// S3のURL生成
 	s3URL := os.Getenv("S3_URL")
-	// mp3をHLSに変換
 	key := s3URL + "/" + songID + "/original.mp3"
 	// key = "https://cassette-songs.s3.ap-southeast-2.amazonaws.com/34ccd82a-6020-4bd5-b197-098f62f6bcc7.mp3"
 	err = ct.infra.ConvertVideoHLS(c.Request().Context(), songID, key)
@@ -47,23 +53,23 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 		return err
 	}
 
+	// HLSファイルのアップロード
 	dirPath := "output"
-
-	// ディレクトリの内容を取得
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// ファイルを一つずつ表示（prefix が "song" のもののみ）
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), songID) {
-			fileD, err := os.Open("output/" + file.Name())
+			fileD, err := os.Open(filepath.Join("output", file.Name()))
 			if err != nil {
 				c.Logger().Error(fmt.Errorf("1%v", err))
 				return fmt.Errorf("1%v", err)
 			}
-			err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/"+songID+file.Name(), fileD)
+			defer fileD.Close()
+
+			err = ct.infra.UploadFile(c.Request().Context(), "cassette-songs", songID+"/"+file.Name(), fileD)
 			if err != nil {
 				c.Logger().Error(fmt.Errorf("1%v", err))
 				return fmt.Errorf("1%v", err)
@@ -71,31 +77,32 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 		}
 	}
 
-	// outputのやつ消す
-	outputDir := "output"
-
-	// songIDに関連するファイルを削除
-	err = os.Remove(filepath.Join(outputDir, songID+".m3u8"))
+	// 不要な一時ファイルを削除
+	err = os.Remove(filepath.Join(dirPath, songID+".m3u8"))
 	if err != nil {
-		fmt.Println("Error deleting m3u8 file:", err)
 		c.Logger().Error(err)
 		return err
 	}
-
-	// .tsファイルを削除
 	for i := 0; ; i++ {
-		tsFile := filepath.Join(outputDir, fmt.Sprintf("%s%05d.ts", songID, i))
+		tsFile := filepath.Join(dirPath, fmt.Sprintf("%s%05d.ts", songID, i))
 		if _, err := os.Stat(tsFile); os.IsNotExist(err) {
-			break // ファイルが存在しない場合はループを終了
+			break
 		}
 		err = os.Remove(tsFile)
 		if err != nil {
-			fmt.Println("Error deleting ts file:", err)
+			c.Logger().Error(err)
+			return err
 		}
 	}
 
-	// ct.db.PostCassette()
+	// TODO:DBに曲情報を保存
+	fmt.Println(cassetteID, userID, songNumber, songTime, name, uploadUser)
 
-	defer src.Close()
-	return c.String(http.StatusOK, "id")
+	m3u8URL := os.Getenv("S3_URL") + "/cassette-songs/" + songID + "/" + songID + ".m3u8"
+	// レスポンスのJSONを構築
+	response := map[string]string{
+		"url": m3u8URL,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
