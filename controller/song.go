@@ -34,7 +34,13 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 	var cassetteID pgtype.UUID
 	var userID pgtype.UUID
 	err = cassetteID.Scan(c.FormValue("cassette_id"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid UUID format")
+	}
 	err = userID.Scan(c.FormValue("user_id"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid UUID format")
+	}
 	songNumber, _ := strconv.Atoi(c.FormValue("song_number"))
 	songTime, _ := strconv.Atoi(c.FormValue("song_time"))
 	name := c.FormValue("name")
