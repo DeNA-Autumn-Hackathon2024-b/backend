@@ -128,3 +128,17 @@ func (ct *Controller) UploadSong(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (ct *Controller) GetSongsByCassette(c echo.Context) error {
+	songID := c.Param("song_id")
+	var uuid pgtype.UUID
+	err := uuid.Scan(songID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid UUID format")
+	}
+	res, err := ct.db.GetSongsByCassette(c.Request().Context(), uuid)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to get song")
+	}
+	return c.JSON(http.StatusOK, res)
+}

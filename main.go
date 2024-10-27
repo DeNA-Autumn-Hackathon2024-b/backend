@@ -27,6 +27,7 @@ func main() {
 	e.GET("/users/:id", c.GetUser)
 	e.POST("/users", c.CreateUser)
 
+	e.GET("/cassettes/songs/:cassette_id", c.GetSongsByCassette)
 	e.POST("/song", c.UploadSong)
 	e.Logger.Fatal(e.Start(":8080"))
 }
